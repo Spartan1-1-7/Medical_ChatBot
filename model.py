@@ -10,6 +10,11 @@ import chainlit as cl
 DB_FAISS_PATH='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/vectorstores/db_faiss'
 
 custom_prompt_template = """ Use the following pieces of information to answer the users question. if you dont know the answer, please just day that you dont know the answer, dont try to make up an answer.
+
+Context: {context}
+Question: {question}
+
+Answer:
 """
 
 def set_custom_prompt():
