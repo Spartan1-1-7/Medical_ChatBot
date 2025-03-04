@@ -72,7 +72,7 @@ async def main(message):
     chain = cl.user_session.get('chain')
     cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True, answer_prefix_tokens=['FINAL', 'ANSWER'])
     cb.answer_reached = True
-    res = await chain.invoke(message.content, config={"callbacks":[cb]})
+    res = chain.invoke(message.content, config={"callbacks":[cb]})
     answer = res["result"]
     sources = res['source_documents']
 
