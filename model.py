@@ -65,11 +65,11 @@ async def start():
     await msg.send()
     msg.content = 'Hi, Welcome to the medical bot. what is your query?'
     await msg.update()
-    cl.user.set('chain', chain)
+    cl.context.user_session.set['chain']= chain
 
 @cl.on_message
 async def main(message):
-    chain = cl.user.get('chain')
+    chain = cl.context.user_session.get('chain')
     cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True, answer_prefix_tokens=['FINAL', 'ANSWER'])
     cb.answer_reached = True
     res = await chain.acall(message, callbacks=[cb])
