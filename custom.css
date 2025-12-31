@@ -1,0 +1,13 @@
+/* Hide Chainlit's default logo */
+.logo {
+    display: none !important;
+}
+
+/* Add custom logo */
+#root::before {
+    content: "";
+    display: block;
+    background: url('/assets/logo.png') no-repeat center;
+    background-size: contain;
+    height: 80px; /* Adjust as needed */
+}

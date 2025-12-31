@@ -1,0 +1,6 @@
+[project]
+name = "Medical Chatbot"  # Changes the displayed name
+
+[ui]
+hide_chainlit_branding = true  # Removes "Built with Chainlit"
+custom_css = "custom.css"
