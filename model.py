@@ -3,9 +3,15 @@ from langchain_core.prompts import PromptTemplate
 # import as `from :class:`~langchain_huggingface import HuggingFaceEmbeddings`
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.llms import CTransformers
+# from langchain_community.llms import CTransformers
 from langchain.chains import RetrievalQA 
 import chainlit as cl
+from langchain_openai import ChatOpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+OPENROUTER_API_KEY = os.getenv("open_router_api")
 
 DB_FAISS_PATH='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/vectorstores/db_faiss'
 
@@ -25,14 +31,25 @@ def set_custom_prompt():
                 input_variables=['context','question'])
     return prompt
 
+# def load_llm():
+#     """load the llm model"""
+#     # llm = CTransformers(model_name='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/llama-2-7b-chat.ggmlv3.q8_0.bin',
+#     llm = CTransformers(model='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/llama-2-7b-chat.ggmlv3.q8_0.bin',
+#     model_type='llama',
+#     max_new_tokens=512,
+#     temperature=0.5)
+#     return llm
+
 def load_llm():
-    """load the llm model"""
-    # llm = CTransformers(model_name='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/llama-2-7b-chat.ggmlv3.q8_0.bin',
-    llm = CTransformers(model='/media/arindam-shukla/Linux Storage/medical_chatbot/medical_bot/llama-2-7b-chat.ggmlv3.q8_0.bin',
-    model_type='llama',
-    max_new_tokens=512,
-    temperature=0.5)
+    llm = ChatOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=OPENROUTER_API_KEY,
+        model="x-ai/grok-4.1-fast",  # or mistralai/mixtral, meta-llama/llama-3.1-8b, etc
+        temperature=0.3,
+        max_tokens=512,
+    )
     return llm
+
 
 def retrieval_qa_chain(llm,prompt,db):
     qa_chain=RetrievalQA.from_chain_type(llm=llm, 
@@ -67,18 +84,38 @@ async def start():
     await msg.update()
     cl.user_session.set('chain', chain)
 
+# @cl.on_message
+# async def main(message):
+#     chain = cl.user_session.get('chain')
+#     # cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True, answer_prefix_tokens=['FINAL', 'ANSWER'])
+#     cb.answer_reached = True
+#     res = chain.invoke(message.content)
+#     answer = res["result"]
+#     sources = res['source_documents']
+
+#     if sources:
+#         answer += f'\nSources: {str(sources)}'
+#     else:
+#         answer += f'\n No Sources Found'
+
+#     await cl.Message(content=answer).send()
+
 @cl.on_message
 async def main(message):
-    chain = cl.user_session.get('chain')
-    cb = cl.AsyncLangchainCallbackHandler(stream_final_answer=True, answer_prefix_tokens=['FINAL', 'ANSWER'])
-    cb.answer_reached = True
-    res = chain.invoke(message.content, config={"callbacks":[cb]})
+    chain = cl.user_session.get("chain")
+
+    res = chain.invoke(message.content)
+
     answer = res["result"]
-    sources = res['source_documents']
+    sources = res["source_documents"]
 
     if sources:
-        answer += f'\nSources: {str(sources)}'
+        answer += "\n\nSources:\n"
+        for doc in sources:
+            src = doc.metadata.get("source", "Unknown")
+            page = doc.metadata.get("page_label", "N/A")
+            answer += f"- {src} (page {page})\n"
     else:
-        answer += f'\n No Sources Found'
+        answer += "\n\nNo sources found."
 
     await cl.Message(content=answer).send()
